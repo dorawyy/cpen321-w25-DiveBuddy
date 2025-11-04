@@ -140,6 +140,58 @@ describe('POST /api/events - unmocked (requires running server)', () => {
 		// cleanup - delete the created event
 		await eventModel.delete(eventInDb!._id);
 	});
+
+	test('returns error when creating event with invalid input - empty title', async () => {
+		const invalidEvent: any = {
+			title: "", // Invalid: empty string
+			description: "TEST DESCRIPTION",
+			date: new Date().toISOString(),
+			capacity: 10,
+			createdBy: USER,
+			attendees: []
+		};
+
+		await expect(eventModel.create(invalidEvent)).rejects.toThrow('Invalid update data');
+	});
+
+	test('returns error when creating event with invalid input - negative capacity', async () => {
+		const invalidEvent: any = {
+			title: "Valid Title",
+			description: "Valid Description",
+			date: new Date().toISOString(),
+			capacity: -5, // Invalid: negative capacity
+			createdBy: USER,
+			attendees: []
+		};
+
+		await expect(eventModel.create(invalidEvent)).rejects.toThrow('Invalid update data');
+	});
+
+	test('returns error when creating event with invalid input - capacity of 0', async () => {
+		const invalidEvent: any = {
+			title: "Valid Title",
+			description: "Valid Description",
+			date: new Date().toISOString(),
+			capacity: 0, // Invalid: capacity must be at least 1
+			createdBy: USER,
+			attendees: []
+		};
+
+		await expect(eventModel.create(invalidEvent)).rejects.toThrow('Invalid update data');
+	});
+
+	test('returns error when creating event with invalid input - title exceeding max length', async () => {
+		const invalidEvent: any = {
+			title: "A".repeat(101), // Invalid: exceeds maxlength of 100
+			description: "TEST DESCRIPTION",
+			date: new Date().toISOString(),
+			capacity: 10,
+			createdBy: USER,
+			attendees: []
+		};
+
+		await expect(eventModel.create(invalidEvent)).rejects.toThrow('Invalid update data');
+	});
 });
 
 describe('PUT /api/events/join/:eventId - unmocked (requires running server)', () => {
@@ -270,6 +322,33 @@ describe('PUT /api/events/:eventId - unmocked (requires running server)', () => 
 		expect(eventInDb?.photo).toBe(updatedEvent.photo);
 		expect(eventInDb?.attendees.map(a => a.toString())).toContain(USER);
 
+		// cleanup - delete the created event
+		await eventModel.delete(createdId);
+	});
+
+	test('returns error when updating event with invalid input - empty title', async () => {
+		// first create an event to ensure it exists
+		const newEvent: CreateEventRequest = {
+			title: "TEST INVALID UPDATE EVENT",
+			description: "TEST INVALID UPDATE DESCRIPTION",
+			date: new Date(),
+			capacity: 10,
+			skillLevel: "Intermediate",
+			location: "Initial Location",
+			latitude: 34.0522,
+			longitude: -118.2437,
+			createdBy: USER,
+			attendees: [],
+			photo: ""
+		};
+		const created = await eventModel.create(newEvent);
+		const createdId = created._id;
+		
+		const invalidUpdate: any = {
+			title: "" // Empty string should fail validation
+		};
+		await expect(eventModel.update(createdId, invalidUpdate)).rejects.toThrow('Invalid update data');
+		
 		// cleanup - delete the created event
 		await eventModel.delete(createdId);
 	});

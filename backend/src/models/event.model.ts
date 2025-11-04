@@ -110,6 +110,10 @@ export class EventModel {
       );
       return updatedEvent;
     } catch (error) {
+      if (error instanceof z.ZodError) {
+        console.error('Validation error:', error.issues);
+        throw new Error('Invalid update data');
+      }
       logger.error('Error updating event:', error);
       throw new Error('Failed to update event');
     }

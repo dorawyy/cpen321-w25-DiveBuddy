@@ -114,6 +114,18 @@ describe('GET /api/users/:id - mocked', () => {
         expect(res.status).toBe(500);
         expect(userModel.findById).toHaveBeenCalledTimes(1);
     });
+
+    test('findById throws "Failed to find user" when database operation fails', async () => {
+        // Mock the User model's findOne method directly
+        const User = mongoose.model('User');
+        const findOneSpy = jest.spyOn(User, 'findOne').mockRejectedValue(new Error('Database connection lost'));
+
+        const testId = new mongoose.Types.ObjectId();
+        await expect(userModel.findById(testId)).rejects.toThrow('Failed to find user');
+        
+        // Explicitly restore this mock
+        findOneSpy.mockRestore();
+    });
 });
 
 describe('PUT /api/users/:id - mocked', () => {
@@ -184,6 +196,23 @@ describe('PUT /api/users/:id - mocked', () => {
         expect(res.status).toBe(500);
         expect(userModel.findById).toHaveBeenCalledTimes(1);
     });
+
+    test('update throws "Failed to update user" when database operation fails', async () => {
+        // Mock the User model's findByIdAndUpdate method directly
+        const User = mongoose.model('User');
+        const updateSpy = jest.spyOn(User, 'findByIdAndUpdate').mockRejectedValue(new Error('Database connection lost'));
+
+        const testId = new mongoose.Types.ObjectId();
+        const updateData: any = {
+            name: 'Updated Name',
+            age: 30
+        };
+
+        await expect(userModel.update(testId, updateData)).rejects.toThrow('Failed to update user');
+        
+        // Explicitly restore this mock
+        updateSpy.mockRestore();
+    });
 });
 
 describe('POST /api/users - mocked', () => {
@@ -223,6 +252,35 @@ describe('POST /api/users - mocked', () => {
         // Assertions
         expect(res.status).toBe(500);
         expect(userModel.update).toHaveBeenCalledTimes(1);
+    });
+
+    test('create throws "Failed to create user" when database operation fails', async () => {
+        // We need to mock the actual mongoose model's create method
+        // Get the User model and mock its create method
+        const User = mongoose.model('User');
+        const createSpy = jest.spyOn(User, 'create').mockRejectedValue(new Error('Database connection lost'));
+
+        const validUserInfo: any = {
+            googleId: "test-google-id",
+            email: "test@example.com",
+            name: "Test User"
+        };
+
+        await expect(userModel.create(validUserInfo)).rejects.toThrow('Failed to create user');
+        
+        // Explicitly restore this mock
+        createSpy.mockRestore();
+    });
+
+    test('findByGoogleId throws "Failed to find user" when database operation fails', async () => {
+        // Mock the User model's findOne method directly
+        const User = mongoose.model('User');
+        const findOneSpy = jest.spyOn(User, 'findOne').mockRejectedValue(new Error('Database connection lost'));
+
+        await expect(userModel.findByGoogleId('test-google-id')).rejects.toThrow('Failed to find user');
+        
+        // Explicitly restore this mock
+        findOneSpy.mockRestore();
     });
 });
 
@@ -276,6 +334,18 @@ describe('DELETE /api/users/:id - mocked', () => {
         expect(res.status).toBe(500);
         expect(userModel.findById).toHaveBeenCalledTimes(1);
         expect(userModel.delete).toHaveBeenCalledTimes(1);
+    });
+
+    test('delete throws "Failed to delete user" when database operation fails', async () => {
+        // Mock the User model's findByIdAndDelete method directly
+        const User = mongoose.model('User');
+        const deleteSpy = jest.spyOn(User, 'findByIdAndDelete').mockRejectedValue(new Error('Database connection lost'));
+
+        const testId = new mongoose.Types.ObjectId();
+        await expect(userModel.delete(testId)).rejects.toThrow('Failed to delete user');
+        
+        // Explicitly restore this mock
+        deleteSpy.mockRestore();
     });
 });
 

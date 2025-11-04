@@ -165,6 +165,19 @@ describe('POST /api/users/ - unmocked (requires running server)', () => {
         expect(res.body.data.user.profilePicture).toBe(updateData.profilePicture);
         expect(res.body.data.user.skillLevel).toBe(updateData.skillLevel);
       });
+
+    test('returns 400 validation error with invalid payload', async () => {
+        const invalidData = {
+            name: "", // Invalid: empty string
+            age: -5, // Invalid: negative age
+            bio: "a".repeat(501), // Invalid: exceeds max length (assuming 500 char limit)
+            bad_data: "InvalidLevel" // Invalid: not a valid skill level
+        };
+        
+        const res = await request(app).post(`/api/users/`).send(invalidData);
+        expect(res.status).toBe(400);
+        expect(res.body).toHaveProperty('message');
+    });
 });
 
 describe('DELETE /api/users/:id - unmocked (requires running server)', () => {

@@ -88,6 +88,16 @@ describe('GET /api/events - mocked', () => {
         expect(res.status).toBe(500);
         expect(eventModel.findAll).toHaveBeenCalledTimes(1);
     });
+
+    test('findAll throws "Failed to fetch events" when database operation fails', async () => {
+        // Mock the Event model's find method directly
+        const Event = mongoose.model('Event');
+        const mockExec = (jest.fn() as any).mockRejectedValue(new Error('Database connection lost'));
+        const mockSort = (jest.fn() as any).mockReturnValue({ exec: mockExec });
+        jest.spyOn(Event, 'find').mockReturnValue({ sort: mockSort } as any);
+
+        await expect(eventModel.findAll()).rejects.toThrow('Failed to fetch events');
+    });
 });
 
 describe('GET /api/events/:id - mocked', () => {
@@ -158,6 +168,15 @@ describe('GET /api/events/:id - mocked', () => {
         // Assertions
         expect(res.status).toBe(500);
         expect(eventModel.findById).toHaveBeenCalledTimes(1);
+    });
+
+    test('findById throws "Failed to find event" when database operation fails', async () => {
+        // Mock the Event model's findOne method directly
+        const Event = mongoose.model('Event');
+        jest.spyOn(Event, 'findOne').mockRejectedValue(new Error('Database connection lost'));
+
+        const testId = new mongoose.Types.ObjectId();
+        await expect(eventModel.findById(testId)).rejects.toThrow('Failed to find event');
     });
 });
 
@@ -236,6 +255,23 @@ describe('POST /api/events - mocked', () => {
         // Assertions
         expect(res.status).toBe(500);
         expect(eventModel.create).toHaveBeenCalledTimes(1);
+    });
+
+    test('create throws "Failed to create event" when database operation fails', async () => {
+        // Mock the Event model's create method directly
+        const Event = mongoose.model('Event');
+        jest.spyOn(Event, 'create').mockRejectedValue(new Error('Database connection lost'));
+
+        const validEventData: any = {
+            title: 'Test Event',
+            description: 'Test Description',
+            date: new Date(),
+            capacity: 10,
+            createdBy: new mongoose.Types.ObjectId().toString(),
+            attendees: []
+        };
+
+        await expect(eventModel.create(validEventData)).rejects.toThrow('Failed to create event');
     });
 });
 
@@ -349,6 +385,23 @@ describe('PUT /api/events/:id - mocked', () => {
         // Assertions
         expect(res.status).toBe(500);
         expect(eventModel.update).toHaveBeenCalledTimes(1);
+    });
+
+    test('update throws "Failed to update event" when database operation fails', async () => {
+        // Mock the Event model's findByIdAndUpdate method directly
+        const Event = mongoose.model('Event');
+        jest.spyOn(Event, 'findByIdAndUpdate').mockRejectedValue(new Error('Database connection lost'));
+
+        const testId = new mongoose.Types.ObjectId();
+        const updateData: any = {
+            title: 'Updated Title',
+            description: 'Updated Description',
+            date: new Date(),
+            capacity: 15,
+            attendees: []
+        };
+
+        await expect(eventModel.update(testId, updateData)).rejects.toThrow('Failed to update event');
     });
 });
 
@@ -663,5 +716,14 @@ describe('DELETE /api/events/:id - mocked', () => {
         // Assertions
         expect(res.status).toBe(500);
         expect(eventModel.delete).toHaveBeenCalledTimes(1);
+    });
+
+    test('delete throws "Failed to delete event" when database operation fails', async () => {
+        // Mock the Event model's findByIdAndDelete method directly
+        const Event = mongoose.model('Event');
+        jest.spyOn(Event, 'findByIdAndDelete').mockRejectedValue(new Error('Database connection lost'));
+
+        const testId = new mongoose.Types.ObjectId();
+        await expect(eventModel.delete(testId)).rejects.toThrow('Failed to delete event');
     });
 });

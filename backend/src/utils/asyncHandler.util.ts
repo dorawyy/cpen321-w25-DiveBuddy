@@ -5,7 +5,7 @@ import type { ParsedQs } from 'qs';
 export const asyncHandler = <P = any, ResBody = any, ReqBody = any, ReqQuery = ParsedQs>(
   fn: (
     // any is mandatory here to ensure compatibility with both ParamsDictionary and unknown
-    req: Request<P, any, ReqBody, ReqQuery>, // eslint-disable-line @typescript-eslint/no-explicit-any
+    req: Request<P, any, ReqBody, ReqQuery>, 
     res: Response<ResBody>,
     next: NextFunction
   ) => Promise<void> | void
